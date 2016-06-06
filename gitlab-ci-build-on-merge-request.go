@@ -114,8 +114,8 @@ func main() {
 		log.Printf("INFO: Triggered build of %s#%s", requestBody.Project.Name,
 			requestBody.ObjectAttributes.SourceBranch)
 	})
-	log.Printf(fmt.Sprintf("INFO: Listening on port %d", port))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	log.Printf(fmt.Sprintf("INFO: Listening on port %d", *port))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
 }
 
 func resolveTrigger(baseURL string, privateToken string, projectId int) (*trigger, error) {
