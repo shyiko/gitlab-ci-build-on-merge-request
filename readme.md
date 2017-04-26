@@ -13,7 +13,7 @@ Build is triggered when merge request is first opened and when commits are added
 
 ```sh
 docker run -it --rm --name gitlab-ci-build-on-merge-request \
-  shyiko/gitlab-ci-build-on-merge-request:0.1.0 \
+  shyiko/gitlab-ci-build-on-merge-request:0.1.1 \
   gitlab-ci-build-on-merge-request --url=http://gitlab.example.com --private_token=<authentication token>
 ```
 
