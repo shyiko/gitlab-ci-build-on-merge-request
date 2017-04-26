@@ -30,6 +30,11 @@ type trigger struct {
 	Token string `json:"token"`
 }
 
+type build struct {
+	Id int `json:"id"`
+	Status string `json:"status"`
+}
+
 func printUsageAndExit(msg string) {
 	if msg != "" {
 		fmt.Fprintf(os.Stderr, msg+"\n\n")
@@ -77,14 +82,20 @@ func main() {
 			return
 		}
 		defer buildsRes.Body.Close()
-		var builds []map[string]interface{}
+		var builds []build
 		if err := json.NewDecoder(buildsRes.Body).Decode(&builds); err != nil {
 			log.Printf("WARN: Failed to deserialize response of GET %s (%s)", buildsUrl, err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		if len(builds) > 0 {
-			return
+			for _, build := range builds {
+				if build.Status != "skipped" {
+					log.Printf("INFO: %s build skipped (reason: build %d is in \"%s\" status)",
+						requestBody.ObjectAttributes.LastCommit.Id, build.Id, build.Status)
+					return
+				}
+			}
 		}
 		trigger, err := resolveTrigger(*baseURL, *privateToken, requestBody.ObjectAttributes.SourceProjectId)
 		if err != nil {
@@ -105,6 +116,7 @@ func main() {
 			return
 		}
 		defer triggerRes.Body.Close()
+		// todo: follow redirects
 		if triggerRes.StatusCode != 201 {
 			log.Printf("WARN: POST %s resulted in %d", triggerUrl, triggerRes.StatusCode)
 			http.Error(w, fmt.Sprint("POST %s resulted in %d", triggerUrl, triggerRes.StatusCode),
