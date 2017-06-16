@@ -43,18 +43,35 @@ func printUsageAndExit(msg string) {
 	os.Exit(1)
 }
 
+func printWarning(msg string) {
+	if msg != "" {
+		fmt.Fprintf(os.Stderr, msg+"\n\n")
+	}
+}
+
 // todo: make sure private token does not leak through response/log
 func main() {
 	var baseURL = flag.String("url", "", "URL (e.g. http://gitlab.com)")
-	var privateToken = flag.String("private_token", "", "Authorization Token (e.g. XXxXXx0xxxXXXxXxXxxX)")
+	var privateTokenGlobal = flag.String("private_token", "", "Authorization Token (e.g. XXxXXx0xxxXXXxXxXxxX)")
 	var port = flag.Int("port", 8080, "Port")
 	flag.Parse()
 	if *baseURL == "" {
 		printUsageAndExit("Error: --url is required")
-	} else if *privateToken == "" {
-		printUsageAndExit("Error: --private_token is required")
+	}
+	if *privateTokenGlobal == "" {
+		printWarning("Warning: --private_token is not set")
 	}
 	http.HandleFunc("/hook", func(w http.ResponseWriter, r *http.Request) {
+		queryPrivateToken := r.URL.Query().Get("private_token")
+		var privateToken *string
+		if queryPrivateToken != "" {
+			privateToken = &queryPrivateToken
+		} else {
+			privateToken = privateTokenGlobal
+		}
+		if *privateToken == "" {
+			fmt.Fprintf(os.Stderr, "Error: private_token is required\n")
+		}
 		var requestBody = &requestBody{}
 		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 			log.Printf("WARN: Failed to deserialize request body (%s)", err.Error())
