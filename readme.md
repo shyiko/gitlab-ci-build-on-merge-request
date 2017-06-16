@@ -13,7 +13,7 @@ Build is triggered when merge request is first opened and when commits are added
 
 ```sh
 docker run -it --rm --name gitlab-ci-build-on-merge-request \
-  shyiko/gitlab-ci-build-on-merge-request:0.1.1 \
+  shyiko/gitlab-ci-build-on-merge-request:0.2.0 \
   gitlab-ci-build-on-merge-request --url=http://gitlab.example.com --private_token=<authentication token>
 ```
 
@@ -37,6 +37,8 @@ docker run -it --rm --name gitlab-ci-build-on-merge-request \
 
   - Create a webhook (go to `Project Settings` -> `Webhooks`) that points to `gitlab-ci-build-on-merge-request`
   server (e.g. "http://gitlab-ci-build-on-merge-request.example.com/hook") and has "Merge Request events" as a trigger.
+
+  > Starting from 0.2.0 private token can also be specified using hook's query parameter "private_token" (see https://github.com/shyiko/gitlab-ci-build-on-merge-request/pull/2).
 
 That's it.
 
