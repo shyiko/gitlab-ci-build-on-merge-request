@@ -65,7 +65,7 @@ func main() {
 		}
 		// do not trigger if build for commit was already triggered
 		buildsUrl := fmt.Sprintf(
-			"%s/api/v3/projects/%d/repository/commits/%s/builds?private_token=%s",
+			"%s/api/v4/projects/%d/repository/commits/%s/statuses?private_token=%s",
 			*baseURL,
 			requestBody.ObjectAttributes.SourceProjectId,
 			requestBody.ObjectAttributes.LastCommit.Id,
@@ -93,7 +93,7 @@ func main() {
 			return
 		}
 		triggerUrl := fmt.Sprintf(
-			"%s/api/v3/projects/%d/trigger/builds?ref=%s&token=%s",
+			"%s/api/v4/projects/%d/trigger/pipeline?ref=%s&token=%s",
 			*baseURL,
 			requestBody.ObjectAttributes.SourceProjectId,
 			requestBody.ObjectAttributes.SourceBranch,
@@ -120,7 +120,7 @@ func main() {
 
 func resolveTrigger(baseURL string, privateToken string, projectId int) (*trigger, error) {
 	fullURL := fmt.Sprintf(
-		"%s/api/v3/projects/%d/triggers?private_token=%s",
+		"%s/api/v4/projects/%d/triggers?private_token=%s",
 		baseURL,
 		projectId,
 		privateToken)
