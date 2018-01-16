@@ -27,11 +27,16 @@ type requestBody struct {
 }
 
 type trigger struct {
+	Id    int    `json:"id"`
 	Token string `json:"token"`
+	Owner struct {
+		Id       int    `json:"id"`
+		Username string `json:"username"`
+	} `json:"owner"`
 }
 
 type build struct {
-	Id int `json:"id"`
+	Id     int    `json:"id"`
 	Status string `json:"status"`
 }
 
@@ -148,16 +153,15 @@ func main() {
 }
 
 func resolveTrigger(baseURL string, privateToken string, projectId int) (*trigger, error) {
-	fullURL := fmt.Sprintf(
-		"%s/api/v4/projects/%d/triggers?private_token=%s",
-		baseURL,
-		projectId,
-		privateToken)
+	fullURL := fmt.Sprintf("%s/api/v4/projects/%d/triggers?private_token=%s", baseURL, projectId, privateToken)
 	res, err := http.Get(fullURL)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("GET %s resulted in %d", fullURL, res.StatusCode)
+	}
 	var triggers []trigger
 	if err := json.NewDecoder(res.Body).Decode(&triggers); err != nil {
 		return nil, fmt.Errorf("Failed to deserialize response of GET %s (%s)", fullURL, err.Error())
@@ -175,5 +179,21 @@ func resolveTrigger(baseURL string, privateToken string, projectId int) (*trigge
 			return nil, fmt.Errorf("Failed to deserialize response of POST %s (%s)", fullURL, err.Error())
 		}
 	}
-	return &triggers[0], nil
+	trigger := triggers[0]
+	if trigger.Owner.Id == 0 { // legacy trigger (without owner)
+		takeOwnershipURL := fmt.Sprintf("%s/api/v4/projects/%d/triggers/%d/take_ownership?private_token=%s",
+			baseURL, projectId, trigger.Id, privateToken)
+		res, err := http.PostForm(takeOwnershipURL, url.Values{})
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+		if res.StatusCode != 200 {
+			return nil, fmt.Errorf("POST %s resulted in %d", takeOwnershipURL, res.StatusCode)
+		}
+		if err := json.NewDecoder(res.Body).Decode(&trigger); err != nil {
+			return nil, fmt.Errorf("Failed to deserialize response of POST %s (%s)", takeOwnershipURL, err.Error())
+		}
+	}
+	return &trigger, nil
 }
