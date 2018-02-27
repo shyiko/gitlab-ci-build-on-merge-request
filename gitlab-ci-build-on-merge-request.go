@@ -104,6 +104,12 @@ func main() {
 			return
 		}
 		defer buildsRes.Body.Close()
+		if buildsRes.StatusCode >= 400 {
+			log.Printf("WARN: GET %s resulted in %d", buildsUrl, buildsRes.StatusCode)
+			http.Error(w, fmt.Sprintf("GET %s resulted in %d", buildsUrl, buildsRes.StatusCode),
+				http.StatusInternalServerError)
+			return
+		}
 		var builds []build
 		if err := json.NewDecoder(buildsRes.Body).Decode(&builds); err != nil {
 			log.Printf("WARN: Failed to deserialize response of GET %s (%s)", buildsUrl, err.Error())
@@ -141,7 +147,7 @@ func main() {
 		// todo: follow redirects
 		if triggerRes.StatusCode != 201 {
 			log.Printf("WARN: POST %s resulted in %d", triggerUrl, triggerRes.StatusCode)
-			http.Error(w, fmt.Sprint("POST %s resulted in %d", triggerUrl, triggerRes.StatusCode),
+			http.Error(w, fmt.Sprintf("POST %s resulted in %d", triggerUrl, triggerRes.StatusCode),
 				http.StatusInternalServerError)
 			return
 		}
