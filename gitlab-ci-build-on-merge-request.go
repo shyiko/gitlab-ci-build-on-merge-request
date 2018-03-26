@@ -173,7 +173,9 @@ func resolveTrigger(baseURL string, privateToken string, projectId int) (*trigge
 		return nil, fmt.Errorf("Failed to deserialize response of GET %s (%s)", fullURL, err.Error())
 	}
 	if len(triggers) == 0 {
-		res, err := http.PostForm(fullURL, url.Values{})
+		res, err := http.PostForm(fullURL, url.Values{
+			"description": {"triggered by gitlab-ci-build-on-merge-request"},
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -181,9 +183,11 @@ func resolveTrigger(baseURL string, privateToken string, projectId int) (*trigge
 		if res.StatusCode != 201 {
 			return nil, fmt.Errorf("POST %s resulted in %d", fullURL, res.StatusCode)
 		}
-		if err := json.NewDecoder(res.Body).Decode(&triggers); err != nil {
+		var t trigger
+		if err := json.NewDecoder(res.Body).Decode(&t); err != nil {
 			return nil, fmt.Errorf("Failed to deserialize response of POST %s (%s)", fullURL, err.Error())
 		}
+		triggers = []trigger{t}
 	}
 	trigger := triggers[0]
 	if trigger.Owner.Id == 0 { // legacy trigger (without owner)
