@@ -174,7 +174,7 @@ func resolveTrigger(baseURL string, privateToken string, projectId int) (*trigge
 	}
 	if len(triggers) == 0 {
 		res, err := http.PostForm(fullURL, url.Values{
-			"description": {"triggered by gitlab-ci-build-on-merge-request"},
+			"description": {"gitlab-ci-build-on-merge-request"},
 		})
 		if err != nil {
 			return nil, err
