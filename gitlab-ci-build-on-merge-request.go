@@ -16,6 +16,7 @@ type requestBody struct {
 		Name string `json:"name"`
 	} `json:"project"`
 	ObjectAttributes struct {
+		TargetBranch    string `json:"target_branch"`
 		SourceBranch    string `json:"source_branch"`
 		SourceProjectId int    `json:"source_project_id"`
 		State           string `json:"state"` // merged, opened or closed
@@ -132,11 +133,12 @@ func main() {
 			return
 		}
 		triggerUrl := fmt.Sprintf(
-			"%s/api/v4/projects/%d/trigger/pipeline?ref=%s&token=%s",
+			"%s/api/v4/projects/%d/trigger/pipeline?ref=%s&token=%s&variables[TARGET_BRANCH]=%s",
 			*baseURL,
 			requestBody.ObjectAttributes.SourceProjectId,
 			requestBody.ObjectAttributes.SourceBranch,
-			trigger.Token)
+			trigger.Token,
+			requestBody.ObjectAttributes.TargetBranch)
 		triggerRes, err := http.PostForm(triggerUrl, url.Values{})
 		if err != nil {
 			log.Printf("WARN: %s", err.Error())
