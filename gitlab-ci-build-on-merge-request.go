@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -59,12 +60,17 @@ func main() {
 	var baseURL = flag.String("url", "", "URL (e.g. http://gitlab.com)")
 	var privateTokenGlobal = flag.String("private_token", "", "Authorization Token (e.g. XXxXXx0xxxXXXxXxXxxX)")
 	var port = flag.Int("port", 8080, "Port")
+	var insecure = flag.Bool("insecure", false, "Disable SSL certificate check")
 	flag.Parse()
 	if *baseURL == "" {
 		printUsageAndExit("Error: --url is required")
 	}
 	if *privateTokenGlobal == "" {
 		printWarning("Warning: --private_token is not set")
+	}
+	// disable SSL certificate if requested
+	if *insecure {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 	http.HandleFunc("/hook", func(w http.ResponseWriter, r *http.Request) {
 		queryPrivateToken := r.URL.Query().Get("private_token")
